@@ -11,7 +11,89 @@
 // Flag Waver UI
 //
 
-;(function ( window, document, $, flagWaver, undefined ) {
+;( function ( window, document, $, rivets, flagWaver, hashVars, undefined ) {
+
+    //
+    // Vars
+    //
+
+    // Browser support
+
+    var isHistorySupported = !!( window.history && window.history.pushState );
+
+    // Settings
+
+    var flagWaverOpts = {
+            isWindOn : true,
+            flag     : {
+                imgUploadMode : 'web',
+                imgURL        : '',
+                imgFilePath   : '',
+                hoisting      : 'dexter',
+                topEdge       : 'top'
+            }
+        };
+
+    var flagWaverControls = {
+            toggleWind : function () {
+                flagWaverOpts.isWindOn = !flagWaverOpts.isWindOn;
+                if ( flagWaverOpts.isWindOn ) {
+                    flagWaver.setWind( 300 );
+                }
+                else {
+                    flagWaver.setWind( 0 );
+                }
+            },
+            flag : {
+                setImgUploadMode : function () {
+                    if ( flagWaverOpts.flag.imgUploadMode === 'web' ) {
+                        $controlImgUpload
+                            .removeClass( 'upload-mode-file' )
+                            .addClass( 'upload-mode-web' )
+                            .append( $( '.input-img-web' ) );
+                    }
+                    else if ( flagWaverOpts.flag.imgUploadMode === 'file' ) {
+                        $controlImgUpload
+                            .removeClass( 'upload-mode-web' )
+                            .addClass( 'upload-mode-file' )
+                            .append( $( '.input-img-file' ) );
+                    }
+                },
+                setImgURL : function () {
+                    flagWaverOpts.flag.imgFilePath = '';
+                    if ( flagWaverOpts.flag.imgURL ) {
+                        setFlagOpts( { imgSrc : flagWaverOpts.flag.imgURL } );
+                        toHash( true );
+                    }
+                },
+                setImgFile : function () {
+                    var file   = this.files[ 0 ],
+                        reader = new window.FileReader();
+                    flagWaverOpts.flag.imgFilePath = this.value;
+                    reader.onload = function ( e ) {
+                        flagWaverOpts.flag.imgURL = '';
+                        setFlagOpts( { imgSrc : e.target.result } );
+                        toHash();
+                    };
+                    reader.readAsDataURL( file );
+                },
+                setHoisting : function () {
+                    setFlagOpts( { hoisting : flagWaverOpts.flag.hoisting } );
+                    toHash();
+                },
+                setTopEdge : function () {
+                    setFlagOpts( { topEdge : flagWaverOpts.flag.topEdge } );
+                    toHash();
+                }
+            }
+        };
+
+    var flagWaverModel = {
+            flagWaverOpts : flagWaverOpts,
+            flagWaverControls : flagWaverControls
+        };
+
+    // DOM elements
 
     var $controlImgUpload,
         $setImgUploadMode,
@@ -27,72 +109,115 @@
     // Functions
     //
 
-    // Set flag image
-    function setFlagOpts ( flagData ) {
-        flagWaver.flag.setOpts( flagData );
-    }
+    function setFlagOpts ( flagData ) { flagWaver.flag.setOpts( flagData ); }
 
-    // Get URI variables
-    function getURIVars () {
-        var vars  = [],
-            href  = window.location.href,
-            pairs = href.slice( href.indexOf( '?' ) + 1 ).split( '&' ),
-            pair, i;
-        for ( i = 0, ii = pairs.length; i < ii; i++ ) {
-            pair = pairs[ i ].split( '=' );
-            vars.push( pair[ 0 ] );
-            vars[ pair[ 0 ] ] = pair[ 1 ];
-        }
-        return vars;
-    }
-
-    // Get hash data
-    function getHashData () {
-        return window.location.hash.split( '#' )[ 1 ];
-    }
-
-    // Get image src from hash data
     function fromHash () {
-        var hashData = getHashData(),
-            imgSrc;
-        if ( hashData ) {
-            if ( hashData[ 0 ] === '?' ) {
-                hashData = getURIVars()[ 'src' ];
-                if ( hashData ) {
-                    imgSrc = window.decodeURIComponent( hashData );
-                }
+        var hashFrag = window.location.hash.split( '#' )[ 1 ],
+            flagOpts = {};
+        if ( hashFrag ) {
+            if ( window.location.href.search( /\#(\!|\?)/ ) >= 0 ) {
+                flagOpts = hashVars.getData();
             }
             else { // Old version links
-                imgSrc = window.unescape( hashData );
+                flagOpts.imgURL = window.unescape( hashFrag );
             }
         }
-        if ( imgSrc ) {
-            $inputImgLink.val( imgSrc );
-            setFlagOpts( { imgSrc : imgSrc } );
+        flagWaverOpts.flag.imgURL   = flagOpts.src;
+        flagWaverOpts.flag.hoisting = flagOpts.hoisting;
+        flagWaverOpts.flag.topEdge  = flagOpts.topedge;
+        setFlagOpts( {
+            imgSrc : flagWaverOpts.flag.imgURL || 'img/NZ.2b.png',
+            topEdge : flagWaverOpts.flag.topEdge,
+            hoisting : flagWaverOpts.flag.hoisting
+        } );
+    }
+
+    function toHash ( isNewState ) {
+        hashVars.setData(
+            {
+                src      : flagWaverOpts.flag.imgURL,
+                hoisting : flagWaverOpts.flag.hoisting,
+                topedge  : flagWaverOpts.flag.topEdge
+            },
+            {
+                isNewState : isNewState,
+                clearHash  : !flagWaverOpts.flag.imgURL
+            }
+        );
+    }
+
+    function updateExpander ( $expander ) {
+        var $expandable = $( $expander.data( 'target' ) );
+        if ( $expandable.hasClass( 'expanded' ) ) {
+            $expander
+                .removeClass( 'closed' )
+                .addClass( 'open' )
+                .val( $expander.data( 'text-expanded' ) )
+                .attr( 'aria-expanded', 'true' );
+            $expandable.attr( 'aria-hidden', 'false' );
         }
         else {
-            $inputImgLink.val( '' );
-            setFlagOpts( { imgSrc : 'img/NZ.2b.png' } );
+            $expander
+                .removeClass( 'open' )
+                .addClass( 'closed' )
+                .val( $expander.data( 'text-collapsed' ) )
+                .attr( 'aria-expanded', 'false' );
+            $expandable.attr( 'aria-hidden', 'true' );
         }
     }
 
-    // Set hash data
-    function toHash () {
-        if ( $inputImgLink.val() ) {
-            window.history.pushState(
-                null,
-                null,
-                '#' + '?src=' + window.encodeURIComponent( $inputImgLink.val() )
-            );
+    //
+    // Rivets.js configuration
+    //
+
+    rivets.configure( {
+        prefix             : 'data-rv',
+        preloadData        : true,
+        rootInterface      : '.',
+        templateDelimiters : [ '{', '}' ]
+    } );
+
+    rivets.formatters.onoff = function ( value, onText, offText ) {
+        return ( value )? onText || 'On' : offText || 'Off';
+    };
+
+    rivets.formatters.fileName = function ( value, defaultText ) {
+        return ( value )? value.split( '\\' ).pop() : defaultText || '';
+    };
+
+    //
+    // Create HashVars
+    //
+
+    hashVars.create( {
+        key : 'src',
+        defaultValue : '',
+        encode : function ( data ) { return window.encodeURIComponent( data ); }
+    } );
+
+    hashVars.create( {
+        key : 'hoisting',
+        defaultValue : 'dexter',
+        decode : function ( value ) {
+            if ( value.toLowerCase().match( /^dex(ter)?$/g ) ) {
+                return 'dexter';
+            }
+            else if ( value.toLowerCase().match( /^sin(ister)?$/g ) ) {
+                return 'sinister';
+            }
+        },
+        encode : function ( data ) { return 'sin'; }
+    } );
+
+    hashVars.create( {
+        key : 'topedge',
+        defaultValue : 'top',
+        decode : function ( value ) {
+            if ( value.toLowerCase().match( /^(top|right|bottom|left)$/g ) ) {
+                return value;
+            }
         }
-        else {
-            window.history.pushState(
-                null,
-                null,
-                window.location.pathname
-            );
-        }
-    }
+    } );
 
     //
     // Init
@@ -115,105 +240,6 @@
         $windToggle       = $( '#wind-toggle' );
 
         //
-        // Add event handlers
-        //
-
-        // Load flag image from hash on user entered hash
-        $( window ).on( 'popstate', fromHash );
-
-        // Determine file loading mode
-        $setImgUploadMode.on( 'change', function () {
-            var mode = $setImgUploadMode.val();
-            if ( mode === 'web' ) {
-                $controlImgUpload.addClass( 'upload-mode-web' );
-                $controlImgUpload.removeClass( 'upload-mode-file' );
-                $controlImgUpload.append( $( '.input-img-web' ) );
-            }
-            else if ( mode === 'file' ) {
-                $controlImgUpload.addClass( 'upload-mode-file' );
-                $controlImgUpload.removeClass( 'upload-mode-web' );
-                $controlImgUpload.append( $( '.input-img-file' ) );
-            }
-        } ).trigger( 'change' );
-
-        // Load flag image from user given url
-        $setImgLink.on( 'click', function () {
-            toHash();
-            setFlagOpts( { imgSrc : $inputImgLink.val() } );
-        } );
-
-        // Load flag image from file
-        $openImgFile.on( 'change', function () {
-            var file   = $openImgFile[ 0 ].files[ 0 ],
-                reader = new window.FileReader();
-            reader.onload = function ( e ) {
-                if ( $inputImgLink.val() || getHashData() ) {
-                    $inputImgLink.val( '' );
-                    toHash();
-                }
-                setFlagOpts( { imgSrc : e.target.result } );
-                $infoImgFile.text( $openImgFile.val().split( '\\' ).pop() );
-            };
-            reader.readAsDataURL( file );
-        } );
-
-        //
-        // Expandable controls
-        //
-
-        function setExpander ( $expander, $expandable ) {
-            if ( $expandable.hasClass( 'expanded' ) ) {
-                $expander.addClass( 'open' );
-                $expander.removeClass( 'closed' );
-            }
-            else {
-                $expander.addClass( 'closed' );
-                $expander.removeClass( 'open' );
-            }
-        }
-
-        $( '.expander' )
-            .on( 'click', function () {
-                var $this       = $( this ),
-                    $expandable = $( $this.data( 'for' ) );
-                $expandable.toggleClass( 'expanded' );
-                setExpander( $this, $expandable );
-            } )
-            .each( function ( i, elem ) {
-                var $elem = $( elem );
-                setExpander(
-                    $elem,
-                    $( $elem.data( 'for' ) )
-                );
-            } );
-
-        //
-        // Settings
-        //
-
-        // Turn wind on or off
-        $windToggle.on( 'change', function () {
-            if ( this.checked ) {
-                flagWaver.setWind( 300 );
-            }
-            else {
-                flagWaver.setWind( 0 );
-            }
-        } );
-
-        $setHoisting.on( 'change', function () {
-            setFlagOpts( {
-                hoisting : $setHoisting.val()
-            } );
-        } );
-
-        $setTopEdge.on( 'change', function () {
-            setFlagOpts( {
-                topEdge : $setTopEdge.val()
-            } );
-        } );
-
-        //
         // Init
         //
 
@@ -222,9 +248,52 @@
         $( '.js-flag-canvas' ).append( flagWaver.canvas );
         window.dispatchEvent( new window.Event( 'resize' ) );
 
-        // Load flag image from hash on page load
+        // Load settings from hash vars on page load
         fromHash();
+
+        //
+        // Bind event handlers
+        //
+
+        // UI controls
+
+        // Expander control
+        $( 'input[type="button"].expander' ).on( 'click', function () {
+            var $this = $( this );
+            $( $this.data( 'target' ) ).toggleClass( 'expanded' );
+            updateExpander( $this );
+        } ).each( function ( i, elem ) { updateExpander( $( elem ) ); } );
+
+        // Select file loading mode
+        rivets.bind( $setImgUploadMode, flagWaverModel );
+        $setImgUploadMode.trigger( 'change' );
+
+        // Load flag image
+
+        // Load flag image from hash on user entered hash
+        if ( isHistorySupported ) $( window ).on( 'popstate', fromHash );
+
+        // Load flag image from user given url
+        rivets.bind( $inputImgLink, flagWaverModel );
+        rivets.bind( $setImgLink,   flagWaverModel );
+
+        // Load flag image from file
+        $openImgFile
+            .on( 'focus', function () {
+                $openImgFile.parent().addClass( 'active' );
+            } )
+            .on( 'blur', function () {
+                $openImgFile.parent().removeClass( 'active' );
+            } );
+
+        rivets.bind( $openImgFile, flagWaverModel );
+        rivets.bind( $infoImgFile, flagWaverModel );
+
+        // Settings
+        rivets.bind( $windToggle,  flagWaverModel );
+        rivets.bind( $setHoisting, flagWaverModel );
+        rivets.bind( $setTopEdge,  flagWaverModel );
 
     } );
 
-}( window, document, jQuery, window.flagWaver ));
+} )( window, document, jQuery, rivets, flagWaver, hashVars );

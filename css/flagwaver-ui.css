@@ -3,6 +3,8 @@
  *
  * Simulate a flag waving in the breeze right in your browser window.
  *
+ * /u/krikienoid
+ *
  */
 
 /* //// Reset //// */
@@ -29,9 +31,14 @@ body,
 .wrapper-page,
 .page-main,
 .js-flag-canvas {
-    width  : 100%;
-    height : 100%;
+    width    : 100%;
+    height   : 100%;
     overflow : hidden;
+}
+
+html,
+body {
+    background-color : #222222;
 }
 
 .page-header,
@@ -52,7 +59,7 @@ body,
 
 .page-controls-more {
     background-color : #888888;
-    background-color : rgba(0,0,0,0.6);
+    background-color : rgba(0, 0, 0, 0.6);
 }
 
 .page-header,
@@ -77,17 +84,14 @@ body,
 
 .expandable {
     max-height : 0;
-    transition : max-height 0.25s;
+    visibility : hidden;
+    transition : max-height 0.25s, visibility 0.25s;
 }
 
 .expandable.expanded {
     max-height : 500px;
-    transition : max-height 1s;
-}
-
-.expander.closed .expander-open,
-.expander.open .expander-closed {
-    display : none;
+    visibility : visible;
+    transition : max-height 1s, visibility 0s;
 }
 
 /* //// Typography and Style //// */
@@ -116,7 +120,7 @@ p, a {
 }
 
 .page-header > h1 {
-    font-size   : 24pt;
+    font-size : 24pt;
 }
 
 .page-controls-group > h2 {
@@ -125,20 +129,7 @@ p, a {
 
 /* //// Input Controls //// */
 
-/* Basic Input */
-
-[role="button"] {
-    cursor : pointer;
-}
-
-/* Basic Input Groups */
-
-.input-control-group {
-    display  : table;
-    position : relative;
-    border-collapse : separate;
-    border-spacing  : 0;
-}
+/* Basic Inputs */
 
 .input-control-group,
 .input-control,
@@ -172,9 +163,9 @@ p, a {
     display            : inline-block;
     border-radius      : 6px;
     padding            : 4px 12px;
-    -webkit-transition : border-color ease-in-out .25s, color ease-in-out .25s, -webkit-box-shadow ease-in-out .25s;
-    -o-transition      : border-color ease-in-out .25s, color ease-in-out .25s, box-shadow ease-in-out .25s;
-    transition         : border-color ease-in-out .25s, color ease-in-out .25s, box-shadow ease-in-out .25s;
+    -webkit-transition : z-index 0s 0.25s, background-image ease-in-out 0.25s, border-color ease-in-out 0.25s, color ease-in-out 0.25s, -webkit-box-shadow ease-in-out 0.25s;
+    -o-transition      : z-index 0s 0.25s, background-image ease-in-out 0.25s, border-color ease-in-out 0.25s, color ease-in-out 0.25s, box-shadow ease-in-out 0.25s;
+    transition         : z-index 0s 0.25s, background-image ease-in-out 0.25s, border-color ease-in-out 0.25s, color ease-in-out 0.25s, box-shadow ease-in-out 0.25s;
 }
 
 .input-btn {
@@ -185,6 +176,27 @@ p, a {
        -moz-user-select : none;
         -ms-user-select : none;
             user-select : none;
+}
+
+.input-control:hover,
+.input-control:focus,
+.input-control:active,
+.input-control.active,
+.input-btn:hover,
+.input-btn:focus,
+.input-btn:active,
+.input-btn.active {
+    border-color : #ffffff;
+    color        : #ffffff;
+}
+
+/* Input Groups */
+
+.input-control-group {
+    display  : table;
+    position : relative;
+    border-collapse : separate;
+    border-spacing  : 0;
 }
 
 .input-control-group .input-control,
@@ -203,7 +215,7 @@ p, a {
     display : table-cell;
 }
 
-.input-control-group > .input-control {
+.input-control-group > .input-control.input-control-main {
     width : 100%;
 }
 
@@ -247,16 +259,33 @@ p, a {
     border-bottom-right-radius : 6px;
 }
 
+.input-control-group > .input-control,
+.input-control-group > .input-btn,
+.input-btn-group > .input-control,
+.input-btn-group > .input-btn {
+    z-index : 0;
+}
+
+.input-control-group > .input-control:hover,
 .input-control-group > .input-control:focus,
+.input-control-group > .input-control:active,
+.input-control-group > .input-control.active,
 .input-control-group > .input-btn:hover,
 .input-control-group > .input-btn:focus,
 .input-control-group > .input-btn:active,
 .input-control-group > .input-btn.active,
+.input-btn-group > .input-control:hover,
+.input-btn-group > .input-control:focus,
+.input-btn-group > .input-control:active,
+.input-btn-group > .input-control.active,
 .input-btn-group > .input-btn:hover,
 .input-btn-group > .input-btn:focus,
 .input-btn-group > .input-btn:active,
 .input-btn-group > .input-btn.active {
     z-index : 2;
+    -webkit-transition : background-image ease-in-out 0.25s, border-color ease-in-out 0.25s, color ease-in-out 0.25s, -webkit-box-shadow ease-in-out 0.25s;
+    -o-transition      : background-image ease-in-out 0.25s, border-color ease-in-out 0.25s, color ease-in-out 0.25s, box-shadow ease-in-out 0.25s;
+    transition         : background-image ease-in-out 0.25s, border-color ease-in-out 0.25s, color ease-in-out 0.25s, box-shadow ease-in-out 0.25s;
 }
 
 .input-control-group > .input-control + .input-control,
@@ -272,7 +301,7 @@ p, a {
 .input-btn-group .input-btn + .input-btn-group,
 .input-btn-group .input-btn-group + .input-btn,
 .input-btn-group .input-btn-group + .input-btn-group {
-    margin-left: -2px;
+    margin-left : -2px;
 }
 
 .input-control-group > .input-addon:first-child,
@@ -290,47 +319,30 @@ p, a {
     margin-top : 0;
 }
 
-/* Input Styling */
-
-.input-control:hover,
-.input-btn:hover,
-.input-btn:focus {
-    border-color : #ffffff;
-    color        : #ffffff;
-}
-
 /* //// Custom Inputs //// */
 
-/* Select Upload Mode */
+/* Select Inputs */
 
 .input-control.input-select {
-    position : relative;
-    padding  : 0;
+    padding-right       : 36px;
+    background-image    : url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="30px" height="36px" viewBox="0 0 30 36" xml:space="preserve"><polygon fill="rgb(204,204,204)" points="15,21 10,16 20,16" /></svg>');
+    background-repeat   : no-repeat;
+    background-position : right;
+    text-indent         : 0.01px;
+    text-overflow       : '';
+    -webkit-appearance  : none;
+       -moz-appearance  : none;
+            appearance  : none;
 }
 
-.input-select:before {
-    position     : absolute;
-    right        : 0;
-    margin-right : 10px;
-    line-height  : 30px;
-    content      : '\25BE';
+.input-control.input-select:hover,
+.input-control.input-select:focus,
+.input-control.input-select:active,
+.input-control.input-select.active {
+    background-image    : url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="30px" height="36px" viewBox="0 0 30 36" xml:space="preserve"><polygon fill="rgb(255,255,255)" points="15,21 10,16 20,16" /></svg>');
 }
 
-.input-select > select {
-    height         : 100%;
-    position       : relative;
-    z-index        : 1;
-    margin         : 0;
-    padding        : 0 36px 0 12px;
-    background     : transparent;
-    border         : 0 none transparent;
-    border-radius  : 0;
-    text-indent    : 0.01px;
-    text-overflow  : '';
-    -webkit-appearance : none;
-       -moz-appearance : none;
-            appearance : none;
-}
+/* Upload Mode Inputs */
 
 .control-img-upload.upload-mode-web > .input-img-file,
 .control-img-upload.upload-mode-file > .input-img-web {
@@ -356,7 +368,7 @@ p, a {
 }
 
 .input-control > .input-cover.input-face {
-    padding : 4px 12px;
+    padding  : 4px 12px;
 }
 
 .input-control > .input-hidden {
@@ -364,16 +376,14 @@ p, a {
     filter   : alpha(opacity=0);
 }
 
-.input-control.input-file,
-.input-control.input-switch {
+.input-control.input-btn.input-btn-md,
+.input-control.input-file {
     min-width : 108px;
-    position  : relative;
-    padding   : 0;
 }
 
-.input-control.input-switch > input[type="checkbox"]:checked + label > span.off,
-.input-control.input-switch > input[type="checkbox"]:not(:checked) + label > span.on {
-    display : none;
+.input-control.input-file {
+    position  : relative;
+    padding   : 0;
 }
 
 /* //// Background Image //// */
@@ -389,12 +399,12 @@ p, a {
 
 @media only screen and (min-width : 480px) {
     .bg-sky {
-        background-image      : url('../img/Sky_over_Washington_Monument-800x600px.jpg');
+        background-image : url('../img/Sky_over_Washington_Monument-800x600px.jpg');
     }
 }
 
 @media only screen and (min-width : 800px) {
     .bg-sky {
-        background-image      : url('../img/Sky_over_Washington_Monument-1600x1200px.jpg');
+        background-image : url('../img/Sky_over_Washington_Monument-1600x1200px.jpg');
     }
 }
