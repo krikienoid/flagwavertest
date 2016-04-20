@@ -99,9 +99,9 @@
     // Functions
     //
 
-    function getVarsFromHash () {
+    function getVarsFromHash ( hash ) {
         var vars = [],
-            hash = window.location.hash,
+            hash = hash || window.location.hash,
             pos  = hash.indexOf( settings.startingChar ),
             pairs, i, ii, pair, key;
         if ( pos < 0 ) { return vars; }
@@ -119,9 +119,9 @@
         return vars;
     }
 
-    function getData () {
+    function getData ( hash ) {
         var data = {},
-            vars = getVarsFromHash(),
+            vars = getVarsFromHash( hash ),
             i, ii, hashVar, str;
         for ( i = 0, ii = hashVars.length; i < ii; i++ ) {
             hashVar = hashVars[ i ];
@@ -163,6 +163,7 @@
         var hash = getHash( data );
         if ( opts && opts.clearHash ) { hash = ''; }
         if ( isHistorySupported ) {
+            hash = hash || '.';
             try {
                 if ( opts && opts.isNewState ) {
                     window.history.pushState( null, '', hash );

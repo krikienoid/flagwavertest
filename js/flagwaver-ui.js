@@ -21,9 +21,31 @@
 
     var isHistorySupported = !!( window.history && window.history.pushState );
 
+    // DOM elements
+
+    var $controlImgUpload,
+        $setImgUploadMode,
+        $inputImgLink,
+        $setImgLink,
+        $setHoisting,
+        $setTopEdge,
+        $openImgFile,
+        $infoImgFile,
+        $windToggle;
+
     // Settings
 
-    var flagWaverOpts = {
+    var flagWaverDefaults = {
+            isWindOn : true,
+            flag     : {
+                imgUploadMode : 'web',
+                imgURL        : '',
+                imgFilePath   : '',
+                hoisting      : 'dexter',
+                topEdge       : 'top'
+            }
+        },
+        flagWaverOpts = {
             isWindOn : true,
             flag     : {
                 imgUploadMode : 'web',
@@ -67,13 +89,15 @@
                     }
                 },
                 setImgFile : function () {
-                    var file   = this.files[ 0 ],
-                        reader = new window.FileReader();
+                    var file       = this.files[ 0 ],
+                        reader     = new window.FileReader(),
+                        isNewState = false;
                     flagWaverOpts.flag.imgFilePath = this.value;
                     reader.onload = function ( e ) {
+                        isNewState = !!( flagWaverOpts.flag.imgURL );
                         flagWaverOpts.flag.imgURL = '';
                         setFlagOpts( { imgSrc : e.target.result } );
-                        toHash();
+                        toHash( isNewState );
                     };
                     reader.readAsDataURL( file );
                 },
@@ -93,18 +117,6 @@
             flagWaverControls : flagWaverControls
         };
 
-    // DOM elements
-
-    var $controlImgUpload,
-        $setImgUploadMode,
-        $inputImgLink,
-        $setImgLink,
-        $setHoisting,
-        $setTopEdge,
-        $openImgFile,
-        $infoImgFile,
-        $windToggle;
-
     //
     // Functions
     //
@@ -116,15 +128,23 @@
             flagOpts = {};
         if ( hashFrag ) {
             if ( window.location.href.search( /\#(\!|\?)/ ) >= 0 ) {
-                flagOpts = hashVars.getData();
+                flagOpts = hashVars.getData(
+                    // Compatibility with old version links
+                    window.location.hash.replace( /\#(\!|\?)/, '#?' )
+                );
             }
-            else { // Old version links
+            else { // Compatibility with old version links
                 flagOpts.imgURL = window.unescape( hashFrag );
             }
+            flagWaverOpts.flag.imgURL   = flagOpts.src;
+            flagWaverOpts.flag.hoisting = flagOpts.hoisting;
+            flagWaverOpts.flag.topEdge  = flagOpts.topedge;
         }
-        flagWaverOpts.flag.imgURL   = flagOpts.src;
-        flagWaverOpts.flag.hoisting = flagOpts.hoisting;
-        flagWaverOpts.flag.topEdge  = flagOpts.topedge;
+        else {
+            flagWaverOpts.flag.imgURL   = flagWaverDefaults.flag.imgURL;
+            flagWaverOpts.flag.hoisting = flagWaverDefaults.flag.hoisting;
+            flagWaverOpts.flag.topEdge  = flagWaverDefaults.flag.topEdge;
+        }
         setFlagOpts( {
             imgSrc : flagWaverOpts.flag.imgURL || 'img/NZ.2b.png',
             topEdge : flagWaverOpts.flag.topEdge,
@@ -262,7 +282,7 @@
             var $this = $( this );
             $( $this.data( 'target' ) ).toggleClass( 'expanded' );
             updateExpander( $this );
-        } ).each( function ( i, elem ) { updateExpander( $( elem ) ); } );
+        } ).each( function () { updateExpander( $( this ) ); } );
 
         // Select file loading mode
         rivets.bind( $setImgUploadMode, flagWaverModel );
@@ -271,9 +291,9 @@
         // Load flag image
 
         // Load flag image from hash on user entered hash
-        if ( isHistorySupported ) $( window ).on( 'popstate', fromHash );
+        if ( isHistorySupported ) { $( window ).on( 'popstate', fromHash ); }
 
-        // Load flag image from user given url
+        // Load flag image from url
         rivets.bind( $inputImgLink, flagWaverModel );
         rivets.bind( $setImgLink,   flagWaverModel );
 
