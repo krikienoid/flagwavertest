@@ -451,11 +451,11 @@
         this.object = new THREE.Mesh( this.cloth.geometry, this.material );
         this.object.castShadow    = true;
         this.object.receiveShadow = true;
-        this.object.customDepthMaterial = new THREE.ShaderMaterial( {
-            uniforms       : { texture : { type: 't', value: blankTexture } },
-            vertexShader   : vertexShader,
-            fragmentShader : fragmentShader
-        } );
+        // this.object.customDepthMaterial = new THREE.ShaderMaterial( {
+        //     uniforms       : { texture : { type: 't', value: blankTexture } },
+        //     vertexShader   : vertexShader,
+        //     fragmentShader : fragmentShader
+        // } );
 
         this.updateQuaternion();
 
@@ -667,8 +667,8 @@
 
         this.object.material.map = texture;
         this.object.material.needsUpdate = true;
-        this.object.customDepthMaterial.uniforms.texture.value = texture;
-        this.object.customDepthMaterial.needsUpdate = true;
+        // this.object.customDepthMaterial.uniforms.texture.value = texture;
+        // this.object.customDepthMaterial.needsUpdate = true;
 
         if ( oldTex ) oldTex.dispose();
 
